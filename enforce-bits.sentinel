@@ -1,0 +1,17 @@
+import "tfplan/v2" as tfplan
+
+tls_keys = filter tfplan.resource_changes as _, rc {
+    rc.type is "tls_private_key" and
+        (rc.change.actions contains "create" or rc.change.actions is ["update"])
+}
+
+# Rule to enforce key length is greater than 2048 bits
+plenty_much_bits = rule {
+  all tls_keys as _, key {
+      key.change.after.rsa_bits >= 2048
+  }
+}
+
+main = rule {
+  plenty_much_bits
+}
